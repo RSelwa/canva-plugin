@@ -23,16 +23,45 @@ const imageUrls = [
   "https://images.pexels.com/photos/2904142/pexels-photo-2904142.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
   "https://images.pexels.com/photos/5403478/pexels-photo-5403478.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
 ];
+
+const fakeUrl =
+  "https://flim-upload-genai.s3.eu-central-1.amazonaws.com/full/upload-1759237236458-0";
+
 export const createDamRouter = () => {
   const router = express.Router();
+
+  router.get("/config", (req, res) => {
+    const headers = req.headers;
+    const authorization = headers["authorization"];
+    const token = authorization?.split(" ")[1];
+
+    if (token !== process.env.BACKEND_SECRET) {
+      return res.status(403).send({ error: "Unauthorized" });
+    }
+
+    const apiKey = process.env.NEXT_PUBLIC_FBASE_API_KEY;
+    const projectId = process.env.NEXT_PUBLIC_FBASE_PROJECT_ID || "";
+    const messagingSenderId = process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID;
+    const appId = process.env.NEXT_PUBLIC_FBASE_APP_ID;
+    const measurementId = process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID;
+
+    res.send({
+      apiKey,
+      authDomain: `${projectId}.firebaseapp.com`,
+      databaseURL: `https://${projectId}.firebaseio.com`,
+      projectId,
+      storageBucket: `${projectId}.appspot.com`,
+      messagingSenderId,
+      appId,
+      measurementId,
+    });
+  });
 
   router.get("/me", async (req, res) => {
     const headers = req.headers;
     const authorization = headers["authorization"];
     const token = authorization?.split(" ")[1];
     const uid = ""; // replace with actual user id
-
-    console.log("Token received:", token);
 
     const result = await fetch(
       `
@@ -47,7 +76,6 @@ https://dev-api.flim.ai/2.0.0/user/${uid}/boards`,
     );
 
     const data = await result.json();
-    console.log("Data received:", data);
 
     res.send(data);
   });
@@ -64,9 +92,9 @@ https://dev-api.flim.ai/2.0.0/user/${uid}/boards`,
       locale,
       // other available fields from the `FindResourcesRequest`
       // containerTypes,
-      // limit,
+      limit,
       // filters,
-      // query,
+      query,
       // sort,
       // tab,
       // containerId,
@@ -75,18 +103,73 @@ https://dev-api.flim.ai/2.0.0/user/${uid}/boards`,
 
     let resources: Resource[] = [];
     if (types.includes("IMAGE")) {
-      resources = await Promise.all(
-        Array.from({ length: 40 }, async (_, i) => ({
-          id: await generateHash(i + ""),
-          mimeType: "image/jpeg",
-          name: `My new thing in ${locale}`, // Use the `locale` value from the request if your backend supports i18n
-          type: "IMAGE",
-          thumbnail: {
-            url: imageUrls[i % imageUrls.length],
+      const result = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/search`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          url: imageUrls[i % imageUrls.length],
-        })),
+          body: JSON.stringify({
+            search: {
+              saved_images: false,
+              full_text: query || "",
+              similar_picture_id: "",
+              movie_id: "",
+              dop: "",
+              director: "",
+              brand: "",
+              agency: "",
+              production_company: "",
+              actor: "",
+              creator: "",
+              artist: "",
+              collection_id: "",
+              board_id: "",
+              filters: {
+                genres: [],
+                colors: [],
+                number_of_persons: [],
+                years: [],
+                shot_types: [],
+                movie_types: [],
+                aspect_ratio: [],
+                safety_content: [],
+                has_video_cuts: false,
+                camera_motions: [],
+              },
+              negative_filters: {
+                aspect_ratio: [],
+                genres: ["ANIMATION"],
+                movie_types: [],
+                colors: [],
+                shot_types: [],
+                number_of_persons: [],
+                years: [],
+                safety_content: ["nudity", "violence"],
+              },
+            },
+            page: 0,
+            sort_by: "",
+            order_by: "",
+            number_per_pages: limit,
+          }),
+        },
       );
+      const data = await result.json();
+
+      const images = data?.query_response?.images || [];
+
+      resources = images.map((image) => ({
+        id: image.id,
+        mimeType: "image/jpeg",
+        name: image.title,
+        type: "IMAGE",
+        thumbnail: {
+          url: image.thumbnail_url,
+        },
+        url: image.full_resolution_url || image.medium_resolution_url,
+      }));
     }
 
     if (types.includes("CONTAINER")) {

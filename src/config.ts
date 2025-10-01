@@ -6,7 +6,7 @@ export const useConfig = (): Config<ContainerTypes> => {
   const intl = useIntl();
   return {
     serviceName: intl.formatMessage({
-      defaultMessage: "Example App",
+      defaultMessage: "Flim App",
       description:
         "Name of the service where the app will pull digital assets from",
     }),

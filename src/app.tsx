@@ -1,12 +1,20 @@
 import { SearchableListView } from "@canva/app-components";
 import { Box } from "@canva/app-ui-kit";
 import "@canva/app-ui-kit/styles.css";
+import FlimApp from "src/flim-app";
 import { findResources } from "./adapter";
 import { useConfig } from "./config";
 import * as styles from "./index.css";
 
+const isCustomFlimDesign = false;
+
 export function App() {
   const config = useConfig();
+
+  if (isCustomFlimDesign) {
+    return <FlimApp />;
+  }
+
   return (
     <Box className={styles.rootWrapper}>
       <SearchableListView
