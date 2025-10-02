@@ -1,39 +1,47 @@
 import type { Image } from "@canva/app-components";
 import { ImageCard } from "@canva/app-ui-kit";
-import { upload } from "@canva/asset";
+import { addElementAtCursor, ImageRef } from "@canva/design";
 
 type Props = { image: Image };
 
 const VirtualImageCard = ({ image }: Props) => {
-  async function uploadImageAndGetRef(imageUrl, thumbnailUrl) {
-    const asset = await upload({
+  // handler click pour ajouter l'élément au design
+  function handleClick() {
+    const exampleImageRef = "YOUR_IMAGE_REF" as ImageRef;
+
+    const data = {
       type: "image",
-      mimeType: "image/jpeg", // or your image mimeType
-      url: imageUrl,
-      thumbnailUrl: thumbnailUrl,
-      aiDisclosure: "none",
-    });
+      ref: exampleImageRef,
+      altText: { text: image.name, decorative: false },
+      dataUrl: image.thumbnail.url,
+      top: 100,
+      left: 100,
+      width: 300,
+      height: 200,
+    };
 
-    console.log("Uploaded asset ref:", asset.ref);
-    return asset.ref;
+    console.log(data);
+
+    addElementAtCursor(data);
   }
 
-  async function handleDragStart(event) {
-    const ref = await uploadImageAndGetRef(image.url, image.thumbnail.url);
-    // ui.startDragToCursor(event, {
-    //   type: "image",
-    //   ref, // ref returned after uploading image with Canva API
-    //   previewUrl: image.thumbnail.url,
-    //   previewSize: { width: 150, height: 150 },
-    //   altText: { text: image.id || "Image", decorative: false },
-    // });
-  }
+  // handler drag start pour démarrer le drag and drop
+  // function handleDragStart(event) {
+  //   event.dataTransfer.setData("application/json", JSON.stringify(image));
+
+  //   ui.startDragToPoint(event, {
+  //     type: "image",
+  //     previewUrl: image.thumbnail.url,
+  //     previewSize:
+  //   });
+  // }
 
   return (
     <ImageCard
+      onClick={handleClick}
       alt={image.name}
       thumbnailUrl={image.thumbnail.url}
-      onDragStart={handleDragStart}
+      // onDragStart={handleDragStart}
     />
   );
 };

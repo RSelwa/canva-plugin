@@ -4,7 +4,7 @@ import { upload } from "@canva/asset";
 import { addElementAtPoint } from "@canva/design";
 import { useEffect, useState } from "react";
 import { findResources } from "src/adapter";
-import ImageCard from "src/ui/image-card";
+import VirtualImageCard from "src/ui/image-card";
 import { auth } from "utils/db";
 import * as styles from "./index.css";
 
@@ -88,7 +88,8 @@ const FlimApp = () => {
       </form>
       <section>
         {images.map((img) => (
-          <ImageCard key={img.id} image={img} />
+          // <EmbedCard thumbnailUrl={img.thumbnail.url} key={img.id} />
+          <VirtualImageCard key={img.id} image={img} />
         ))}
       </section>
 
