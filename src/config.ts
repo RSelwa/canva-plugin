@@ -129,7 +129,7 @@ export const useConfig = (): Config<ContainerTypes> => {
       {
         value: "folder",
         label: intl.formatMessage({
-          defaultMessage: "Folders",
+          defaultMessage: "Boards",
           description: "Name of the asset container type",
         }),
         listingSurfaces: [

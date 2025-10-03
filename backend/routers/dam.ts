@@ -16,6 +16,10 @@ export async function generateHash(message: string) {
   return hashHex;
 }
 
+const fake_uid = process.env.FAKE_USER_UID || "";
+const fake_token = process.env.FAKE_USER_TOKEN || "";
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
 const imageUrls = [
   "https://images.pexels.com/photos/1495580/pexels-photo-1495580.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
   "https://images.pexels.com/photos/3943197/pexels-photo-3943197.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
@@ -97,65 +101,71 @@ https://dev-api.flim.ai/2.0.0/user/${uid}/boards`,
       query,
       // sort,
       // tab,
-      // containerId,
-      // parentContainerType,
+      containerId,
+      parentContainerType,
     } = req.body;
 
     let resources: Resource[] = [];
     if (types.includes("IMAGE")) {
-      const result = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/search`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const page = parseInt(continuation) || 0;
+      const board_id =
+        parentContainerType === "folder" && containerId ? containerId : "";
+
+      const searchQuery = {
+        search: {
+          saved_images: false,
+          full_text: query || "",
+          similar_picture_id: "",
+          movie_id: "",
+          dop: "",
+          director: "",
+          brand: "",
+          agency: "",
+          production_company: "",
+          actor: "",
+          creator: "",
+          artist: "",
+          collection_id: "",
+          board_id,
+          filters: {
+            genres: [],
+            colors: [],
+            number_of_persons: [],
+            years: [],
+            shot_types: [],
+            movie_types: [],
+            aspect_ratio: [],
+            safety_content: [],
+            has_video_cuts: false,
+            camera_motions: [],
           },
-          body: JSON.stringify({
-            search: {
-              saved_images: false,
-              full_text: query || "",
-              similar_picture_id: "",
-              movie_id: "",
-              dop: "",
-              director: "",
-              brand: "",
-              agency: "",
-              production_company: "",
-              actor: "",
-              creator: "",
-              artist: "",
-              collection_id: "",
-              board_id: "",
-              filters: {
-                genres: [],
-                colors: [],
-                number_of_persons: [],
-                years: [],
-                shot_types: [],
-                movie_types: [],
-                aspect_ratio: [],
-                safety_content: [],
-                has_video_cuts: false,
-                camera_motions: [],
-              },
-              negative_filters: {
-                aspect_ratio: [],
-                genres: ["ANIMATION"],
-                movie_types: [],
-                colors: [],
-                shot_types: [],
-                number_of_persons: [],
-                years: [],
-                safety_content: ["nudity", "violence"],
-              },
-            },
-            page: 0,
-            sort_by: "",
-            order_by: "",
-            number_per_pages: limit,
-          }),
+          negative_filters: {
+            aspect_ratio: [],
+            genres: ["ANIMATION"],
+            movie_types: [],
+            colors: [],
+            shot_types: [],
+            number_of_persons: [],
+            years: [],
+            safety_content: ["nudity", "violence"],
+          },
         },
-      );
+        page,
+        sort_by: "addedAt",
+        order_by: "",
+        number_per_pages: limit,
+      };
+
+      // console.log("SEARCH QUERY: ", searchQuery, "boardID", board_id);
+
+      const result = await fetch(`${baseUrl}/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${fake_token}`,
+        },
+        body: JSON.stringify(searchQuery),
+      });
       const data = await result.json();
 
       const images = data?.query_response?.images || [];
@@ -173,20 +183,29 @@ https://dev-api.flim.ai/2.0.0/user/${uid}/boards`,
     }
 
     if (types.includes("CONTAINER")) {
-      const containers = await Promise.all(
-        Array.from(
-          { length: 10 },
-          async (_, i) =>
-            ({
-              id: await generateHash(i + ""),
-              containerType: "folder",
-              name: `My folder ${i}`,
-              type: "CONTAINER",
-            }) satisfies Container,
-        ),
-      );
+      const result = await fetch(`${baseUrl}/user/${fake_uid}/boards`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${fake_token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-      resources = resources.concat(containers);
+      const boardsData = await result.json();
+      const boards = [
+        ...boardsData.boards,
+        ...boardsData.writerBoards,
+        ...boardsData.readerBoards,
+      ];
+
+      const folders: Container[] = boards.map((board, i) => ({
+        id: board.boardId,
+        containerType: "folder",
+        name: board.title,
+        type: "CONTAINER",
+      }));
+
+      resources = resources.concat(folders);
     }
 
     res.send({
