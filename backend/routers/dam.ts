@@ -16,8 +16,6 @@ export async function generateHash(message: string) {
   return hashHex;
 }
 
-const fake_uid = process.env.FAKE_USER_UID || "";
-const fake_token = process.env.FAKE_USER_TOKEN || "";
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 const imageUrls = [
@@ -61,157 +59,143 @@ export const createDamRouter = () => {
     });
   });
 
-  router.get("/me", async (req, res) => {
-    const headers = req.headers;
-    const authorization = headers["authorization"];
-    const token = authorization?.split(" ")[1];
-    const uid = ""; // replace with actual user id
-
-    const result = await fetch(
-      `
-https://dev-api.flim.ai/2.0.0/user/${uid}/boards`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    const data = await result.json();
-
-    res.send(data);
-  });
-
   /**
    * This endpoint returns the data for your app.
    */
   router.post("/resources/find", async (req, res) => {
-    // You should modify these lines to return data from your
-    // digital asset manager (DAM) based on the findResourcesRequest
-    const {
-      types,
-      continuation,
-      locale,
-      // other available fields from the `FindResourcesRequest`
-      // containerTypes,
-      limit,
-      // filters,
-      query,
-      // sort,
-      // tab,
-      containerId,
-      parentContainerType,
-    } = req.body;
+    try {
+      const headers = req.headers;
+      const authorization = headers["authorization"];
+      const token = authorization?.split(" ")[1];
+      const userId = headers["userid"];
 
-    let resources: Resource[] = [];
-    if (types.includes("IMAGE")) {
-      const page = parseInt(continuation) || 0;
-      const board_id =
-        parentContainerType === "folder" && containerId ? containerId : "";
+      // You should modify these lines to return data from your
+      // digital asset manager (DAM) based on the findResourcesRequest
+      const {
+        types,
+        continuation,
+        locale,
+        // other available fields from the `FindResourcesRequest`
+        // containerTypes,
+        limit,
+        // filters,
+        query,
+        // sort,
+        // tab,
+        containerId,
+        parentContainerType,
+      } = req.body;
 
-      const searchQuery = {
-        search: {
-          saved_images: false,
-          full_text: query || "",
-          similar_picture_id: "",
-          movie_id: "",
-          dop: "",
-          director: "",
-          brand: "",
-          agency: "",
-          production_company: "",
-          actor: "",
-          creator: "",
-          artist: "",
-          collection_id: "",
-          board_id,
-          filters: {
-            genres: [],
-            colors: [],
-            number_of_persons: [],
-            years: [],
-            shot_types: [],
-            movie_types: [],
-            aspect_ratio: [],
-            safety_content: [],
-            has_video_cuts: false,
-            camera_motions: [],
+      let resources: Resource[] = [];
+      if (types.includes("IMAGE")) {
+        const page = parseInt(continuation) || 0;
+        const board_id =
+          parentContainerType === "folder" && containerId ? containerId : "";
+
+        const searchQuery = {
+          search: {
+            saved_images: false,
+            full_text: query || "",
+            similar_picture_id: "",
+            movie_id: "",
+            dop: "",
+            director: "",
+            brand: "",
+            agency: "",
+            production_company: "",
+            actor: "",
+            creator: "",
+            artist: "",
+            collection_id: "",
+            board_id,
+            filters: {
+              genres: [],
+              colors: [],
+              number_of_persons: [],
+              years: [],
+              shot_types: [],
+              movie_types: [],
+              aspect_ratio: [],
+              safety_content: [],
+              has_video_cuts: false,
+              camera_motions: [],
+            },
+            negative_filters: {
+              aspect_ratio: [],
+              genres: ["ANIMATION"],
+              movie_types: [],
+              colors: [],
+              shot_types: [],
+              number_of_persons: [],
+              years: [],
+              safety_content: ["nudity", "violence"],
+            },
           },
-          negative_filters: {
-            aspect_ratio: [],
-            genres: ["ANIMATION"],
-            movie_types: [],
-            colors: [],
-            shot_types: [],
-            number_of_persons: [],
-            years: [],
-            safety_content: ["nudity", "violence"],
+          page,
+          sort_by: "addedAt",
+          order_by: "",
+          number_per_pages: limit,
+        };
+
+        const result = await fetch(`${baseUrl}/search`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        },
-        page,
-        sort_by: "addedAt",
-        order_by: "",
-        number_per_pages: limit,
-      };
+          body: JSON.stringify(searchQuery),
+        });
+        const data = await result.json();
 
-      // console.log("SEARCH QUERY: ", searchQuery, "boardID", board_id);
+        const images = data?.query_response?.images || [];
 
-      const result = await fetch(`${baseUrl}/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${fake_token}`,
-        },
-        body: JSON.stringify(searchQuery),
+        resources = images.map((image) => ({
+          id: image.id,
+          mimeType: "image/jpeg",
+          name: image.title,
+          type: "IMAGE",
+          thumbnail: {
+            url: image.thumbnail_url,
+          },
+          url: image.full_resolution_url || image.medium_resolution_url,
+        }));
+      }
+
+      if (types.includes("CONTAINER")) {
+        const result = await fetch(`${baseUrl}/user/${userId}/boards`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const boardsData = await result.json();
+        const boards = [
+          ...(boardsData?.boards || []),
+          ...(boardsData?.writerBoards || []),
+          ...(boardsData?.readerBoards || []),
+        ];
+
+        const folders: Container[] = boards.map((board, i) => ({
+          id: board.boardId,
+          containerType: "folder",
+          name: board.title,
+          type: "CONTAINER",
+        }));
+
+        resources = resources.concat(folders);
+      }
+
+      res.send({
+        resources,
+        continuation: +(continuation || 0) + 1,
       });
-      const data = await result.json();
-
-      const images = data?.query_response?.images || [];
-
-      resources = images.map((image) => ({
-        id: image.id,
-        mimeType: "image/jpeg",
-        name: image.title,
-        type: "IMAGE",
-        thumbnail: {
-          url: image.thumbnail_url,
-        },
-        url: image.full_resolution_url || image.medium_resolution_url,
-      }));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error in /resources/find", error);
+      res.status(500).send({ error: "Internal Server Error" });
     }
-
-    if (types.includes("CONTAINER")) {
-      const result = await fetch(`${baseUrl}/user/${fake_uid}/boards`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${fake_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const boardsData = await result.json();
-      const boards = [
-        ...boardsData.boards,
-        ...boardsData.writerBoards,
-        ...boardsData.readerBoards,
-      ];
-
-      const folders: Container[] = boards.map((board, i) => ({
-        id: board.boardId,
-        containerType: "folder",
-        name: board.title,
-        type: "CONTAINER",
-      }));
-
-      resources = resources.concat(folders);
-    }
-
-    res.send({
-      resources,
-      continuation: +(continuation || 0) + 1,
-    });
   });
 
   return router;

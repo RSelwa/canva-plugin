@@ -1,7 +1,7 @@
 import type { Config } from "@canva/app-components";
 import { useIntl } from "react-intl";
 
-type ContainerTypes = "folder";
+type ContainerTypes = "collection";
 export const useConfig = (): Config<ContainerTypes> => {
   const intl = useIntl();
   return {
@@ -13,7 +13,7 @@ export const useConfig = (): Config<ContainerTypes> => {
     search: {
       enabled: true,
       filterFormConfig: {
-        containerTypes: ["folder"],
+        containerTypes: ["collection"],
         filters: [
           {
             filterType: "CHECKBOX",
@@ -127,7 +127,7 @@ export const useConfig = (): Config<ContainerTypes> => {
     },
     containerTypes: [
       {
-        value: "folder",
+        value: "collection",
         label: intl.formatMessage({
           defaultMessage: "Boards",
           description: "Name of the asset container type",
@@ -204,7 +204,7 @@ export const useConfig = (): Config<ContainerTypes> => {
     export: {
       enabled: true,
       // TODO provide a container type that user can choose to save into, or remove this field if user doesn't need to choose a container
-      containerTypes: ["folder"],
+      containerTypes: ["collection"],
       // TODO remove file types that are not supported by your platform
       acceptedFileTypes: [
         "png",

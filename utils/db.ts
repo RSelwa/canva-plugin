@@ -1,5 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  getAuth,
+  setPersistence,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore/lite";
 
 const backendSecret = "supersecret";
@@ -17,3 +21,4 @@ const firebaseConfig = await result.json();
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+await setPersistence(auth, browserLocalPersistence);

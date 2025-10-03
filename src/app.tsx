@@ -2,6 +2,7 @@ import { SearchableListView } from "@canva/app-components";
 import { Box, Switch } from "@canva/app-ui-kit";
 import "@canva/app-ui-kit/styles.css";
 import { useState } from "react";
+import { AuthProvider } from "src/auth-provider";
 import FlimApp from "src/flim-app";
 import { findResources } from "./adapter";
 import { useConfig } from "./config";
@@ -12,7 +13,7 @@ export function App() {
   const config = useConfig();
 
   return (
-    <>
+    <AuthProvider>
       <section
         style={{
           margin: "16px",
@@ -51,6 +52,6 @@ export function App() {
           />
         </Box>
       )}
-    </>
+    </AuthProvider>
   );
 }
