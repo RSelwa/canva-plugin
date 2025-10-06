@@ -1,10 +1,10 @@
-import type { Configuration } from "webpack";
-import { DefinePlugin, optimize } from "webpack";
-import * as path from "path";
-import * as TerserPlugin from "terser-webpack-plugin";
 import { transform } from "@formatjs/ts-transformer";
 import * as chalk from "chalk";
 import { config } from "dotenv";
+import * as path from "path";
+import * as TerserPlugin from "terser-webpack-plugin";
+import type { Configuration } from "webpack";
+import { DefinePlugin, optimize } from "webpack";
 import { Configuration as DevServerConfiguration } from "webpack-dev-server";
 
 config();
@@ -181,6 +181,21 @@ export function buildConfig({
     plugins: [
       new DefinePlugin({
         BACKEND_HOST: JSON.stringify(backendHost),
+        "process.env.NEXT_PUBLIC_FBASE_API_KEY": JSON.stringify(
+          process.env.NEXT_PUBLIC_FBASE_API_KEY,
+        ),
+        "process.env.NEXT_PUBLIC_FBASE_PROJECT_ID": JSON.stringify(
+          process.env.NEXT_PUBLIC_FBASE_PROJECT_ID,
+        ),
+        "process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID": JSON.stringify(
+          process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID,
+        ),
+        "process.env.NEXT_PUBLIC_FBASE_APP_ID": JSON.stringify(
+          process.env.NEXT_PUBLIC_FBASE_APP_ID,
+        ),
+        "process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID": JSON.stringify(
+          process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID,
+        ),
       }),
       // Apps can only submit a single JS file via the Developer Portal
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),

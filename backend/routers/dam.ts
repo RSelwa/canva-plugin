@@ -32,33 +32,6 @@ const fakeUrl =
 export const createDamRouter = () => {
   const router = express.Router();
 
-  router.get("/config", (req, res) => {
-    const headers = req.headers;
-    const authorization = headers["authorization"];
-    const token = authorization?.split(" ")[1];
-
-    if (token !== process.env.BACKEND_SECRET) {
-      return res.status(403).send({ error: "Unauthorized" });
-    }
-
-    const apiKey = process.env.NEXT_PUBLIC_FBASE_API_KEY;
-    const projectId = process.env.NEXT_PUBLIC_FBASE_PROJECT_ID || "";
-    const messagingSenderId = process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID;
-    const appId = process.env.NEXT_PUBLIC_FBASE_APP_ID;
-    const measurementId = process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID;
-
-    res.send({
-      apiKey,
-      authDomain: `${projectId}.firebaseapp.com`,
-      databaseURL: `https://${projectId}.firebaseio.com`,
-      projectId,
-      storageBucket: `${projectId}.appspot.com`,
-      messagingSenderId,
-      appId,
-      measurementId,
-    });
-  });
-
   /**
    * This endpoint returns the data for your app.
    */
