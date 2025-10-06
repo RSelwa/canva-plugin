@@ -5,8 +5,10 @@ import type {
 import { auth as authCanvas } from "@canva/user";
 import { auth } from "utils/db";
 
+export type ContainerTypes = "boards" | "genai";
+
 export async function findResources(
-  request: FindResourcesRequest<"folder">,
+  request: FindResourcesRequest<ContainerTypes>,
 ): Promise<FindResourcesResponse> {
   const userToken = await authCanvas.getCanvaUserToken();
   const token = await auth.currentUser?.getIdToken();
@@ -16,6 +18,9 @@ export async function findResources(
   // If using the backend example, the URL should be updated to `${BACKEND_HOST}/api/resources/find` to ensure requests are authenticated in production
   const url = new URL(`${BACKEND_HOST}/resources/find`);
 
+  const req = { ...request };
+  req.limit = 100;
+
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -24,9 +29,11 @@ export async function findResources(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify(req),
     });
     const body = await response.json();
+
+    console.log("REQUEST", request, "RESPONSE", body);
 
     if (body.resources) {
       return {
@@ -35,6 +42,7 @@ export async function findResources(
         continuation: body.continuation,
       };
     }
+
     return {
       type: "ERROR",
       errorCode: body.errorCode || "INTERNAL_ERROR",

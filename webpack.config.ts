@@ -181,6 +181,9 @@ export function buildConfig({
     plugins: [
       new DefinePlugin({
         BACKEND_HOST: JSON.stringify(backendHost),
+        "process.env.NEXT_PUBLIC_API_BASE_URL": JSON.stringify(
+          process.env.NEXT_PUBLIC_API_BASE_URL,
+        ),
         "process.env.NEXT_PUBLIC_FBASE_API_KEY": JSON.stringify(
           process.env.NEXT_PUBLIC_FBASE_API_KEY,
         ),

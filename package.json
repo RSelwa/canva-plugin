@@ -28,12 +28,14 @@
     "@canva/error": "^2.1.0",
     "@canva/platform": "^2.2.0",
     "@canva/user": "^2.1.1",
+    "@reduxjs/toolkit": "^2.9.0",
     "cookie-parser": "1.4.7",
     "cors": "2.8.5",
     "firebase": "^12.3.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-intl": "6.8.7"
+    "react-intl": "6.8.7",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@canva/app-eslint-plugin": "^1.0.0-beta.5",

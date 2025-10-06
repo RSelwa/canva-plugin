@@ -1,4 +1,4 @@
-import type { Container, Resource } from "@canva/app-components";
+import type { Container, Resource, Thumbnail } from "@canva/app-components";
 import * as crypto from "crypto";
 import * as express from "express";
 
@@ -49,7 +49,7 @@ export const createDamRouter = () => {
         continuation,
         locale,
         // other available fields from the `FindResourcesRequest`
-        // containerTypes,
+        containerTypes,
         limit,
         // filters,
         query,
@@ -60,7 +60,7 @@ export const createDamRouter = () => {
       } = req.body;
 
       let resources: Resource[] = [];
-      if (types.includes("IMAGE")) {
+      if (types.includes("IMAGE") || containerTypes?.includes("genai")) {
         const page = parseInt(continuation) || 0;
         const board_id =
           parentContainerType === "folder" && containerId ? containerId : "";
@@ -134,7 +134,7 @@ export const createDamRouter = () => {
         }));
       }
 
-      if (types.includes("CONTAINER")) {
+      if (containerTypes?.includes("boards")) {
         const result = await fetch(`${baseUrl}/user/${userId}/boards`, {
           method: "GET",
           headers: {
@@ -150,12 +150,20 @@ export const createDamRouter = () => {
           ...(boardsData?.readerBoards || []),
         ];
 
-        const folders: Container[] = boards.map((board, i) => ({
-          id: board.boardId,
-          containerType: "folder",
-          name: board.title,
-          type: "CONTAINER",
-        }));
+        const folders: Container[] = boards.map((board, i) => {
+          const thumbnail: Thumbnail = {
+            url: board?.coverUrl,
+          };
+
+          return {
+            id: board.boardId,
+            containerType: "folder",
+            name: board.title,
+            type: "CONTAINER",
+            thumbnail,
+            numItems: board?.numberOfImages,
+          };
+        });
 
         resources = resources.concat(folders);
       }

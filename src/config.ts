@@ -1,10 +1,13 @@
 import type { Config } from "@canva/app-components";
 import { useIntl } from "react-intl";
+import { ContainerTypes } from "src/adapter";
 
-type ContainerTypes = "collection";
 export const useConfig = (): Config<ContainerTypes> => {
   const intl = useIntl();
+
   return {
+    resourcesPerPage: 20,
+    containersPerPage: 20,
     serviceName: intl.formatMessage({
       defaultMessage: "Flim App",
       description:
@@ -13,8 +16,23 @@ export const useConfig = (): Config<ContainerTypes> => {
     search: {
       enabled: true,
       filterFormConfig: {
-        containerTypes: ["collection"],
+        containerTypes: ["boards"],
         filters: [
+          {
+            filterType: "CHECKBOX",
+            label: intl.formatMessage({
+              defaultMessage: "File Type",
+              description: "Label of filters for file type",
+            }),
+            key: "MovieType",
+            options: [
+              { value: "MOVIES", label: "MOVIES" },
+              { value: "MUSIC VIDEOS", label: "MUSIC VIDEOS" },
+              { value: "TVSERIES", label: "TVSERIES" },
+              { value: "ADS", label: "ADS" },
+            ],
+            allowCustomValue: false,
+          },
           {
             filterType: "CHECKBOX",
             label: intl.formatMessage({
@@ -127,7 +145,7 @@ export const useConfig = (): Config<ContainerTypes> => {
     },
     containerTypes: [
       {
-        value: "collection",
+        value: "boards",
         label: intl.formatMessage({
           defaultMessage: "Boards",
           description: "Name of the asset container type",
@@ -148,6 +166,28 @@ export const useConfig = (): Config<ContainerTypes> => {
           }),
         },
       },
+      // {
+      //   value: "genai",
+      //   label: intl.formatMessage({
+      //     defaultMessage: "Genai",
+      //     description: "Name of the asset container type",
+      //   }),
+      //   listingSurfaces: [
+      //     { surface: "HOMEPAGE" },
+      //     {
+      //       surface: "CONTAINER",
+      //       parentContainerTypes: ["folder"],
+      //     },
+      //     { surface: "SEARCH" },
+      //   ],
+      //   searchInsideContainer: {
+      //     enabled: true,
+      //     placeholder: intl.formatMessage({
+      //       defaultMessage: "Search for media inside this folder",
+      //       description: "Placeholder of a search input box",
+      //     }),
+      //   },
+      // },
     ],
     sortOptions: [
       {
@@ -201,20 +241,20 @@ export const useConfig = (): Config<ContainerTypes> => {
       description: "Helper text to explain why some assets are not visible",
     }),
     // TODO remove `export` if your app does not support exporting the Canva design into an external platform
-    export: {
-      enabled: true,
-      // TODO provide a container type that user can choose to save into, or remove this field if user doesn't need to choose a container
-      containerTypes: ["collection"],
-      // TODO remove file types that are not supported by your platform
-      acceptedFileTypes: [
-        "png",
-        "pdf_standard",
-        "jpg",
-        "gif",
-        "svg",
-        "video",
-        "pptx",
-      ],
-    },
+    // export: {
+    //   enabled: true,
+    //   // TODO provide a container type that user can choose to save into, or remove this field if user doesn't need to choose a container
+    //   containerTypes: ["boards"],
+    //   // TODO remove file types that are not supported by your platform
+    //   acceptedFileTypes: [
+    //     "png",
+    //     "pdf_standard",
+    //     "jpg",
+    //     "gif",
+    //     "svg",
+    //     "video",
+    //     "pptx",
+    //   ],
+    // },
   };
 };
