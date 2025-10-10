@@ -1,5 +1,5 @@
 import { SearchableListView } from "@canva/app-components";
-import { Box } from "@canva/app-ui-kit";
+import { Box, Switch } from "@canva/app-ui-kit";
 import "@canva/app-ui-kit/styles.css";
 import { useState } from "react";
 import { AuthProvider } from "src/auth-provider";
@@ -9,12 +9,12 @@ import { useConfig } from "./config";
 import * as styles from "./index.css";
 
 export function App() {
-  const [isCustomFlimDesign, setIsCustomFlimDesign] = useState(false);
+  const [isCustomFlimDesign, setIsCustomFlimDesign] = useState(true);
   const config = useConfig();
 
   return (
     <AuthProvider>
-      {/* <section
+      <section
         style={{
           margin: "16px",
           display: "flex",
@@ -24,7 +24,7 @@ export function App() {
       >
         <Switch onChange={setIsCustomFlimDesign} />
         Flim Design
-      </section> */}
+      </section>
       {isCustomFlimDesign ? (
         <FlimApp />
       ) : (

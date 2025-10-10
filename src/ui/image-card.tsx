@@ -1,48 +1,63 @@
 import type { Image } from "@canva/app-components";
-import { ImageCard } from "@canva/app-ui-kit";
-import { addElementAtCursor, ImageRef } from "@canva/design";
+import { upload } from "@canva/asset";
+import { useAddElement } from "utils/use_add_element";
 
 type Props = { image: Image };
 
 const VirtualImageCard = ({ image }: Props) => {
-  // handler click pour ajouter l'élément au design
-  function handleClick() {
-    const exampleImageRef = "YOUR_IMAGE_REF" as ImageRef;
+  const addElement = useAddElement();
 
-    const data = {
+  const importAndAddImage = async () => {
+    // Start uploading the image using Canva's upload API
+    // This creates an asset reference that can be used immediately while the upload continues in the background
+    const img = await upload({
       type: "image",
-      ref: exampleImageRef,
-      altText: { text: image.name, decorative: false },
-      dataUrl: image.thumbnail.url,
-      top: 100,
-      left: 100,
-      width: 300,
-      height: 200,
-    };
+      mimeType: "image/jpeg",
+      url: image.thumbnail.url,
+      thumbnailUrl: image.thumbnail.url,
+      width: image.width || 1920,
+      height: image.height || 1080,
+      aiDisclosure: "none",
+    });
 
-    console.log(data);
+    // Add the image element to the current design using the asset reference
+    // Canva will display the thumbnail initially and replace it with the full image once upload completes
+    await addElement({
+      type: "image",
+      ref: img.ref,
+      altText: {
+        text: "a photo of buildings by the water",
+        decorative: undefined,
+      },
+    });
 
-    addElementAtCursor(data);
-  }
+    // Wait for the upload to complete to handle any upload errors
+    // In production apps, this should include proper error handling and user feedback
+    await img.whenUploaded();
 
-  // handler drag start pour démarrer le drag and drop
-  // function handleDragStart(event) {
-  //   event.dataTransfer.setData("application/json", JSON.stringify(image));
+    // Upload completed successfully
+    console.log("Upload complete!");
+  };
 
-  //   ui.startDragToPoint(event, {
-  //     type: "image",
-  //     previewUrl: image.thumbnail.url,
-  //     previewSize:
-  //   });
-  // }
+  const handleDragEnd = (event) => {
+    event.preventDefault();
+    importAndAddImage();
+
+    console.log(event);
+  };
 
   return (
-    <ImageCard
-      onClick={handleClick}
-      alt={image.name}
-      thumbnailUrl={image.thumbnail.url}
-      // onDragStart={handleDragStart}
+    <img
+      src={image.thumbnail.url}
+      onClick={importAndAddImage}
+      onDragEnd={handleDragEnd}
     />
+    // <ImageCard
+    //   onClick={handleClick}
+    //   alt={image.name}
+    //   thumbnailUrl={image.thumbnail.url}
+    //   // onDragStart={handleDragStart}
+    // />
   );
 };
 

@@ -22,7 +22,6 @@ const FlimApp = () => {
 
       if (data.type === "SUCCESS" && data?.resources) {
         const imagesList = data.resources.filter((r) => r.type === "IMAGE");
-        console.log(imagesList);
         setImages(imagesList);
       }
     } catch (error) {
